@@ -26,14 +26,28 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
-      - name: Prepare static site
+      - name: Validate static site
+        shell: bash
         run: |
+          set -euo pipefail
+          test -s web/index.html
+          test -s web/styles.css
+          test -s web/app.js
+          grep -q '<title>Jasmine 2.0' web/index.html
+          grep -q 'id="top"' web/index.html
+          grep -q 'id="thesis"' web/index.html
+          test "$(grep -c '<section' web/index.html)" -ge 10
+          test "$(grep -c 'href="#' web/index.html)" -ge 10
+
+      - name: Prepare site
+        shell: bash
+        run: |
+          set -euo pipefail
           rm -rf _site
           mkdir -p _site
           cp -r web/. _site/
+          touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/styles.css
           test -s _site/app.js
