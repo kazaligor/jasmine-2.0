@@ -141,13 +141,13 @@ export default function Home() {
     <Section id="s06" num="06" title="Экономика платформы" lead="Ценность определяется не количеством выпущенных ЦФА, а объёмом ликвидности, проходящей через инфраструктуру, и её вкладом в прибыль.">
       <div className="som-grid">{[['STOCK','SAM 25–50 трлн ₽','SOM 5–10 трлн ₽ AUM'],['FLOW','SAM ≈ 100 трлн ₽ / год','SOM ≈ 20 трлн ₽ оборота / год'],['HYBRID','SAM 20–60 трлн ₽','SOM 5–15 трлн ₽ активов в обращении']].map(x=><div key={x[0]}><span>{x[0]}</span><strong>{x[1]}</strong><b>{x[2]}</b></div>)}</div>
       <h3 className="subheading">Источники дохода</h3>
-      <div className="revenue-grid">{revenues.map(([h,products,income])=><article key={h}><span>{h}</span><h3>{(products as string[]).join(' · ')}</h3><p>{income}</p></article>)}</div>
+      <div className="revenue-grid">{revenues.map(([h,products,income])=><article key={String(h)}><span>{h}</span><h3>{(products as string[]).join(' · ')}</h3><p>{income}</p></article>)}</div>
       <div className="economics-equation"><span>ВЫРУЧКА</span><b>−</b><span>ПЕРЕМЕННЫЕ ЗАТРАТЫ</span><b>−</b><span>ЗАТРАТЫ НА РИСК</span><b>=</b><strong>CONTRIBUTION P&amp;L</strong></div>
       <div className="source-note">SOM / экономика — целевые стратегические ориентиры, а не утверждённый финансовый план.</div>
     </Section>
 
     <Section id="s07" num="07" title="Roadmap: от продуктов к инфраструктуре" lead="Платформа развивается поэтапно: сначала доказательство спроса и экономики, затем рыночная ликвидность и только после этого — расширение инфраструктурных возможностей.">
-      <div className="roadmap-new">{roadmap.map(([n,h,goal,products,result])=><article key={n}><div className="roadmap-num">{n}</div><div><div className="roadmap-head"><h3>{h}</h3><span>{goal}</span></div><div className="roadmap-cols"><div><b>ПРОДУКТЫ / ВОЗМОЖНОСТИ</b><ul>{(products as string[]).map(x=><li key={x}>{x}</li>)}</ul></div><div><b>ЧТО ПОЛУЧАЕТ ПЛАТФОРМА</b><ul>{(result as string[]).map(x=><li key={x}>{x}</li>)}</ul></div></div></div></article>)}</div>
+      <div className="roadmap-new">{roadmap.map(([n,h,goal,products,result])=><article key={String(n)}><div className="roadmap-num">{n}</div><div><div className="roadmap-head"><h3>{h}</h3><span>{goal}</span></div><div className="roadmap-cols"><div><b>ПРОДУКТЫ / ВОЗМОЖНОСТИ</b><ul>{(products as string[]).map(x=><li key={x}>{x}</li>)}</ul></div><div><b>ЧТО ПОЛУЧАЕТ ПЛАТФОРМА</b><ul>{(result as string[]).map(x=><li key={x}>{x}</li>)}</ul></div></div></div></article>)}</div>
       <div className="principles"><span>СТРАТЕГИЧЕСКИЕ ПРИНЦИПЫ</span><ol><li>Клиенты приходят за финансированием, а не за ЦФА.</li><li>ЦФА — инфраструктура, а не конечный продукт.</li><li>Один актив должен использоваться максимальное количество раз.</li><li>Основная ценность — не эмиссия, а оборот.</li><li>Карта корпоративной ликвидности — основа продуктового развития.</li><li>Главная цель — увеличить скорость обращения капитала в экономике.</li></ol></div>
     </Section>
 
