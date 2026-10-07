@@ -1,13 +1,18 @@
 # Jasmine 2.0
 
-Capital Distribution & Liquidity Engine — interactive strategic narrative.
+Executive web presentation for the VTB Jasmine strategy.
 
-## Current slice
-Hero → Capital Is There → Friction → Jasmine Thesis.
+## Architecture
 
-## Design principle
-CFA is an instrument inside the system, not the product story. The narrative is built around capital routing, liquidity, reuse and contribution economics.
+Static HTML/CSS/JavaScript only.
 
-## Run
-npm install
-npm run dev
+- `web/index.html`
+- `web/styles.css`
+- `web/app.js`
+- GitHub Actions → GitHub Pages
+
+No backend, database, API, Vercel, Next.js or external hosting.
+
+Published site:
+
+https://kazaligor.github.io/jasmine-2.0/
