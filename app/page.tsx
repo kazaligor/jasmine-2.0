@@ -1,93 +1,163 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { useState } from 'react';
 
-const nodes=['КОРПОРАТИВНЫЙ','ОРИГИНАЦИЯ','СТРУКТУРИРОВАНИЕ','ДИСТРИБУЦИЯ','ЛИКВИДНОСТЬ'];
-const frictions=[['01','ДОСТУП','Спрос на капитал и инвестиционная ликвидность редко соединяются в одном непрерывном потоке.'],['02','ЦЕНООБРАЗОВАНИЕ','Фрагментированное исполнение снижает прозрачность ценообразования и эффективность использования капитала.'],['03','ЛИКВИДНОСТЬ','Транзакция может создать актив, не создавая надёжного механизма вторичной ликвидности.'],['04','ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ','Капитал часто останавливается на расчётах вместо того, чтобы становиться ресурсом для следующей транзакции.']];
-const oldModel=['Продукт','Транзакция','Расчёты'];
-const jasmine=['Капитал','Оригинация','Структурирование','Дистрибуция','Ликвидность','Повторное использование','Повторение'];
-function Flow(){const [active,setActive]=useState(0);useEffect(()=>{const id=setInterval(()=>setActive(x=>(x+1)%nodes.length),1200);return()=>clearInterval(id)},[]);return <div className="flow-stage" aria-label="Движение капитала"><div className="flow-line"/>{nodes.map((n,i)=><div className={'flow-node '+(i===active?'active':'')} key={n} style={{left:(8+i*21)+'%'}}><span>{n}</span></div>)}</div>}
-function Section({id,eyebrow,title,children,copy}:{id:string;eyebrow:string;title:string;children:React.ReactNode;copy:string}){return <section id={id} className="section"><div className="section-head"><div className="eyebrow">{eyebrow}</div><div><h2>{title}</h2><p>{copy}</p></div></div>{children}</section>}
+const layers = [
+  {
+    key: 'STOCK',
+    title: 'Балансовый слой',
+    subtitle: 'Портфельная ликвидность',
+    description: 'Капитал, уже размещённый в финансовых активах и обязательствах компаний. Может быть токенизирован, перераспределён или использован в качестве обеспечения.',
+    markets: ['Корпоративное кредитование','Облигации','Акции','Лизинг','ПИФы','Проектное финансирование','Страховые резервы','Венчурные инвестиции','Векселя','Драгоценные металлы'],
+    tam: '≈ 350–450 трлн ₽',
+    metric: 'AUM / объём размещений / удержание капитала'
+  },
+  {
+    key: 'FLOW',
+    title: 'Транзакционный слой',
+    subtitle: 'Оборот ликвидности',
+    description: 'Ежегодный объём операций по привлечению, размещению и перераспределению корпоративной ликвидности. Определяет скорость обращения капитала и создаёт повторяющуюся выручку инфраструктуры.',
+    markets: ['Денежный рынок','Срочный рынок','СПФИ','ПФИ'],
+    tam: '≈ 1 000 трлн ₽ / год',
+    metric: 'GMV / оборот / сделки / комиссии'
+  },
+  {
+    key: 'HYBRID',
+    title: 'Инфраструктурный слой',
+    subtitle: 'Активы в обороте',
+    description: 'Рынки, где актив одновременно является объектом инвестирования и инструментом финансирования. ЦФА позволяют использовать цифровой актив в нескольких последующих сценариях.',
+    markets: ['Казначейские инструменты','Финансирование дебиторской задолженности','Supply Chain Finance','Финансирование складских запасов','Секьюритизация','СФУК','Краудлендинг'],
+    tam: '≈ 120–250 трлн ₽',
+    metric: 'AUM + оборот + повторное использование'
+  }
+];
 
-const engineScenarios = {
-  Financing:{label:'КОРПОРАТИВНОЕ ФИНАНСИРОВАНИЕ',type:'СТОК',desc:'Долгосрочный спрос на капитал, где важны структура, соответствие инвестору и повторяемость выпусков.',cfa:'Целесообразен, когда структурированный выпуск, расчёты и дистрибуция улучшают доступ к финансированию или снижают операционные затраты.',investor:'ЧАСТНЫЕ / ИНСТИТУЦИОНАЛЬНЫЕ',liquidity:'ПЕРВИЧНЫЙ → ВЫБОРОЧНЫЙ ВТОРИЧНЫЙ',reuse:'РЕИНВЕСТИРОВАНИЕ / РЕФИНАНСИРОВАНИЕ',value:'ОРИГИНАЦИЯ + СТРУКТУРИРОВАНИЕ + ДИСТРИБУЦИЯ'},
-  Structured:{label:'СТРУКТУРИРОВАННЫЙ ПОТОК',type:'ГИБРИД',desc:'Потоки с обеспечением или коммерческие потоки, где взаимосвязаны финансирование, дистрибуция и распределение риска.',cfa:'Целесообразен, когда программируемость, прозрачность и автоматизированное обслуживание улучшают структуру.',investor:'ИНСТИТУЦИОНАЛЬНЫЕ / КОРПОРАТИВНЫЕ',liquidity:'ПЕРВИЧНЫЙ + ВТОРИЧНЫЙ',reuse:'ТОРГОВЛЯ / ФИНАНСИРОВАНИЕ / ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ',value:'СТРУКТУРИРОВАНИЕ + ДИСТРИБУЦИЯ + ФИНАНСИРОВАНИЕ'},
-  Treasury:{label:'ЛИКВИДНОСТЬ И КАЗНАЧЕЙСТВО',type:'ПОТОК',desc:'Краткосрочные потребности в капитале, где скорость, расчёты и повторяемость могут существенно изменить экономику.',cfa:'Целесообразен только там, где автоматизация, расчёты или контролируемая передача создают измеримую эффективность.',investor:'ПОСТАВЩИКИ ЛИКВИДНОСТИ / ИНВЕСТОРЫ',liquidity:'МНОГОКРАТНО ИСПОЛЬЗУЕМЫЙ / ВЫСОКАЯ ЧАСТОТА',reuse:'КАПИТАЛ → СЛЕДУЮЩИЙ ПОТОК',value:'ДИСТРИБУЦИЯ + ФИНАНСИРОВАНИЕ + ИНФРАСТРУКТУРА'}
-} as const;
-const engineStages = ['СПРОС НА КАПИТАЛ','ОРИГИНАЦИЯ','СТРУКТУРИРОВАНИЕ','ДИСТРИБУЦИЯ','ПЕРВИЧНЫЙ РЫНОК','ВТОРИЧНЫЙ РЫНОК','ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ','CONTRIBUTION P&L'];
-function JasmineEngine(){
-  const [scenario,setScenario]=useState<keyof typeof engineScenarios>('Financing');
-  const [stage,setStage]=useState(0); const s=engineScenarios[scenario];
-  const stageCopy=[
-    ['ПОЧЕМУ СЕЙЧАС',s.desc],
-    ['ИСТОЧНИК','Направить квалифицированный '+s.label.toLowerCase()+' в повторяемый поток капитала.'],
-    ['КОНСТРУКЦИЯ','Выбирать структуру, распределение риска и инструмент только там, где они улучшают экономику базовой операции.'],
-    ['СОПОСТАВЛЕНИЕ','Соединить структуру с сегментом инвесторов, наиболее соответствующим её профилю риска, доходности и ликвидности.'],
-    ['ВЫПУСК','Создать первичную транзакцию и сформировать путь к следующему движению капитала.'],
-    ['ЛИКВИДНОСТЬ','Обеспечить ценообразование, передачу и вторичное исполнение там, где это оправдано спросом и экономикой.'],
-    ['ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ','Вернуть капитал в финансирование, обеспечение, реинвестирование или следующий выпуск.'],
-    ['ЦЕННОСТЬ','Целевой результат — '+s.value.toLowerCase()+' за вычетом переменных затрат и затрат на риск.']
-  ][stage];
-  return <Section id="engine" eyebrow="03.5 / КОНТУР JASMINE" title="Один поток. Один экономический тест." copy="Выберите сценарий использования капитала. Затем пройдите один и тот же контур от спроса до contribution P&L. Инструмент меняется — операционная логика остаётся.">
-    <div className="engine-shell">
-      <div className="engine-scenarios">{(Object.keys(engineScenarios) as Array<keyof typeof engineScenarios>).map(x=><button className={scenario===x?'selected':''} onClick={()=>{setScenario(x);setStage(0)}} key={x}><span>{engineScenarios[x].type}</span>{engineScenarios[x].label}</button>)}</div>
-      <div className="engine-route">{engineStages.map((x,i)=><Fragment key={x}><button className={stage===i?'active':''} onClick={()=>setStage(i)}><i>{String(i+1).padStart(2,'0')}</i><span>{x}</span></button>{i<engineStages.length-1&&<b>→</b>}</Fragment>)}</div>
-      <div className="engine-detail"><div><span className="eyebrow">{stageCopy[0]}</span><h3>{stageCopy[1]}</h3><p>{s.desc}</p></div><div className="engine-metrics"><div><span className="eyebrow">ТИП КАПИТАЛА</span><strong>{s.type}</strong></div><div><span className="eyebrow">ИНВЕСТОР</span><strong>{s.investor}</strong></div><div><span className="eyebrow">ЛИКВИДНОСТЬ</span><strong>{s.liquidity}</strong></div><div><span className="eyebrow">ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ</span><strong>{s.reuse}</strong></div></div></div>
-      <div className="engine-bottom"><div><span className="eyebrow">ТЕСТ ЦФА</span><strong>{s.cfa}</strong></div><div><span className="eyebrow">ЭКОНОМИЧЕСКИЙ ПУЛ ЦЕННОСТИ</span><strong>{s.value}</strong></div></div>
+const problems = [
+  ['01','Фрагментированная инфраструктура','Для привлечения и размещения ликвидности компании используют множество разрозненных инструментов и участников рынка.',['Множество посредников','Сложные процессы согласования','Высокая стоимость инфраструктуры','Длительный time-to-market']],
+  ['02','Низкая мобильность капитала','Значительная часть корпоративной ликвидности остаётся «запертой» в отдельных активах и не используется повторно.',['Простаивающая ликвидность','Ограниченное использование активов как обеспечения','Низкая скорость перераспределения капитала']],
+  ['03','Высокие транзакционные издержки','Каждая сделка требует ручных операций, юридического сопровождения и интеграции между участниками.',['Рост OPEX','Увеличение стоимости финансирования','Ограниченная доступность инструментов для среднего бизнеса']],
+  ['04','Недостаточная стандартизация','Большинство корпоративных инструментов имеют индивидуальную структуру и плохо масштабируются.',['Низкая ликвидность','Ограниченный вторичный рынок','Сложность автоматизации процессов']]
+];
+
+const sam = [
+  ['STOCK','350–450 трлн ₽','25–50 трлн ₽','7–12%','ЦФА-облигации, дебиторская задолженность, фонды, лизинг, проектное финансирование','AUM / размещения / удержание'],
+  ['FLOW','≈ 1 000 трлн ₽ / год','≈ 100 трлн ₽ оборота','10–15%','Денежный рынок, РЕПО, вторичный рынок ЦФА, Treasury','GMV / оборот / сделки / комиссии'],
+  ['HYBRID','120–250 трлн ₽','20–60 трлн ₽','15–25%','SCF, факторинг, секьюритизация, казначейство, складское финансирование','AUM + оборот + повторное использование']
+];
+
+const revenues = [
+  ['ПЕРВИЧНЫЙ РЫНОК',['Выпуск ЦФА','Размещение','Структурирование'],'Комиссия за выпуск / размещение'],
+  ['ВТОРИЧНЫЙ РЫНОК',['Обращение','OTC','Market Making'],'Комиссия за сделку / доход от маркет-мейкинга'],
+  ['ФИНАНСИРОВАНИЕ',['РЕПО','SCF','Факторинг','Treasury'],'Процентный спред / комиссия'],
+  ['ИНФРАСТРУКТУРА',['Custody','Smart contracts','Интеграции','API'],'Сервисная подписка / комиссии']
+];
+
+const roadmap = [
+  ['01','Уже доступно','Создать продукты, не требующие существенных изменений законодательства.',['ЦФА на денежные требования','Цифровые облигации','ЦФА на дебиторскую задолженность','Факторинг через ЦФА','SCF','Цифровые структурные продукты','Краткосрочные инвестиционные продукты'],['Рост AUM','Рост числа эмитентов','Рост числа инвесторов','Комиссии за выпуск и размещение']],
+  ['02','Развитие рыночной инфраструктуры','Сделать ЦФА полноценным финансовым инструментом.',['Вторичный рынок ЦФА','OTC-платформа','Казначейские продукты на ЦФА','Автоматическое управление залогом'],['Рост оборота','Рост LTV клиента','Повторные сделки','Рост комиссионного дохода']],
+  ['03','Развитие регулирования','Превратить ЦФА в универсальную инфраструктуру движения капитала.',['ЦФА-РЕПО','ЦФА как универсальный залог','Межплатформенный оборот','Автоматическое цифровое казначейство','Кросс-продуктовые сделки'],['Эффект сети','Масштабирование оборота','Новые источники ликвидности','Инфраструктурная маржа']]
+];
+
+function Section({num,title,lead,children,id}:{num:string;title:string;lead?:string;children:React.ReactNode;id:string}) {
+  return <section id={id} className="slide section">
+    <div className="section-number">{num}</div>
+    <div className="section-main">
+      <div className="section-kicker">JASMINE / ПРОЕКТНАЯ КОНЦЕПЦИЯ</div>
+      <h2>{title}</h2>
+      {lead && <p className="section-lead">{lead}</p>}
+      {children}
     </div>
-  </Section>
+  </section>
 }
-const liquidityModes = {
-  Primary:{label:'ПЕРВИЧНЫЙ РЫНОК',desc:'Капитал движется от эмитента к первому инвестору. Контур сфокусирован на оригинации, структурировании и дистрибуции.',route:['ЭМИТЕНТ','СТРУКТУРА','ИНВЕСТОР A'],signals:['ОРИГИНАЦИЯ','СТРУКТУРИРОВАНИЕ','ДИСТРИБУЦИЯ']},
-  Secondary:{label:'ВТОРИЧНЫЙ РЫНОК',desc:'Капитал движется между инвесторами. Контур сфокусирован на ценообразовании, маркет-мейкинге и ликвидности.',route:['ИНВЕСТОР A','ВТОРИЧНЫЙ РЫНОК','ИНВЕСТОР B'],signals:['ТОРГОВЛЯ','МАРКЕТ-МЕЙКИНГ','ЦЕНООБРАЗОВАНИЕ']}
-} as const;
-function LiquiditySection(){
-  const [mode,setMode]=useState<keyof typeof liquidityModes>('Primary');
-  const m=liquidityModes[mode];
-  return <Section id="liquidity" eyebrow="03 / КОНТУР ЛИКВИДНОСТИ" title="Транзакция должна создавать путь к следующей транзакции." copy="Первичный выпуск — только начало. Вторичная торговля, маркет-мейкинг, обратная связь по цене и финансирование превращают актив в повторно используемый компонент капитала.">
-    <div className="liquidity-map"><div className="liquidity-toolbar"><div className="toggle">{(Object.keys(liquidityModes) as Array<keyof typeof liquidityModes>).map(x=><button className={mode===x?'selected':''} onClick={()=>setMode(x)} key={x}>{x}</button>)}</div><span className="liquidity-status"><span className="pulse"/> {m.label}</span></div>
-    <p className="interactive-copy">{m.desc}</p><div className="capital-path"><span>КАПИТАЛ</span><i>→</i><strong>{mode==='Primary'?'ЭМИТЕНТ':'ИНВЕСТОР A'}</strong><i>→</i><b>{mode==='Primary'?'ПЕРВИЧНЫЙ РЫНОК':'ВТОРИЧНЫЙ РЫНОК'}</b><i>→</i><strong>{mode==='Primary'?'ИНВЕСТОР A':'ИНВЕСТОР B'}</strong><i>→</i><span>{mode==='Primary'?'ЛИКВИДНОСТЬ':'ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ'}</span></div><div className="liq-row">{m.route.map((x,i)=><Fragment key={x}><span className={i===1?'route-core':''}>{x}</span>{i<2&&<b>→</b>}</Fragment>)}</div>
-    <div className="liq-secondary"><span>{m.signals[0]}</span><strong>{m.signals[1]}</strong><span>{m.signals[2]}</span></div><div className="liq-footer"><span>ОБРАТНАЯ СВЯЗЬ ПО ЦЕНЕ</span><span>↕ КАПИТАЛ</span><span>ЛИКВИДНОСТЬ</span></div></div>
-  </Section>
+
+function LayerCard({layer,active,onClick}:{layer:typeof layers[number];active:boolean;onClick:()=>void}) {
+  return <button className={'layer-card '+(active?'active':'')} onClick={onClick}>
+    <div className="layer-top"><span className="layer-key">{layer.key}</span><span className="layer-tam">{layer.tam}</span></div>
+    <h3>{layer.title}</h3><div className="layer-subtitle">{layer.subtitle}</div>
+    <p>{layer.description}</p>
+    <div className="market-list">{layer.markets.map(x=><span key={x}>{x}</span>)}</div>
+    <div className="layer-metric"><span>ОСНОВНАЯ МЕТРИКА</span><b>{layer.metric}</b></div>
+  </button>
 }
-const systemModes = {
-  Stock:{title:'Корпоративное финансирование',desc:'Потребности в более долгосрочном финансировании, где важны качество актива, структура и повторяемость выпусков.',examples:['Дебиторская задолженность','Инфраструктура','Реальные активы'],liquidity:'Структурированная / периодическая',economics:'Оригинация + структурирование'},
-  Hybrid:{title:'Структурированные потоки',desc:'Структуры, объединяющие базовые активы или коммерческие потоки с финансированием и дистрибуцией.',examples:['Цепочки поставок','С обеспечением','Товарные / складские'],liquidity:'Первичный + выборочный вторичный',economics:'Структурирование + дистрибуция + финансирование'},
-  Flow:{title:'Ликвидность и казначейство',desc:'Краткосрочные потребности, где скорость, автоматизация, расчёты и повторное использование могут существенно улучшить экономику.',examples:['Краткосрочное финансирование','Казначейство','Торговые потоки'],liquidity:'Высокая частота / многократное использование',economics:'Дистрибуция + финансирование + инфраструктура'}
-} as const;
-function BusinessSystemSection(){
-  const [mode,setMode]=useState<keyof typeof systemModes>('Stock'); const m=systemModes[mode];
-  return <Section id="system" eyebrow="04 / БИЗНЕС-СИСТЕМА" title="Сток. Гибрид. Поток." copy="Карта возможностей — это система сценариев использования капитала, а не каталог продуктов ЦФА. Инструменты используются только там, где они улучшают экономику базовой операции.">
-    <div className="system-interactive"><div className="system-tabs">{(Object.keys(systemModes) as Array<keyof typeof systemModes>).map(x=><button className={mode===x?'selected':''} onClick={()=>setMode(x)} key={x}>{x==='Stock'?'Сток':x==='Hybrid'?'Гибрид':'Поток'}</button>)}</div>
-    <div className="system-detail"><div><span className="eyebrow">ВЫБРАННЫЙ СЛОЙ</span><h3>{m.title}</h3><p>{m.desc}</p></div><div><span className="eyebrow">СЦЕНАРИИ</span>{m.examples.map(x=><strong key={x}>{x}</strong>)}</div><div><span className="eyebrow">ЛИКВИДНОСТЬ ПРОФИЛЬ</span><strong>{m.liquidity}</strong><span className="eyebrow">ПЕРВИЧНЫЙ РЫНОК ЦЕННОСТЬ ПУЛ</span><strong>{m.economics}</strong></div></div></div>
-  </Section>
+
+export default function Home() {
+  const [layer,setLayer] = useState(0);
+  return <main>
+    <header className="topbar">
+      <a className="brand" href="#top">JASMINE <span>02.0</span></a>
+      <nav>{['01','02','03','04','05','06','07'].map((n,i)=><a key={n} href={'#s'+n}>{n}</a>)}</nav>
+      <span className="topbar-label">VTB / 2026</span>
+    </header>
+
+    <section id="top" className="hero slide">
+      <div className="hero-grid">
+        <div>
+          <div className="section-kicker">ПРОЕКТ JASMINE / VTB</div>
+          <h1>Платформа<br/>управления<br/><span>корпоративной<br/>ликвидностью</span></h1>
+        </div>
+        <div className="hero-right">
+          <div className="hero-rule"></div>
+          <p>Единая цифровая среда для привлечения, размещения и обращения корпоративной ликвидности, использующая ЦФА как инфраструктуру движения капитала.</p>
+          <div className="hero-flow"><b>ПРИВЛЕЧЕНИЕ</b><i>→</i><b>РАЗМЕЩЕНИЕ</b><i>→</i><b>ОБОРОТ</b><i>→</i><b>ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ</b></div>
+          <div className="hero-note">ЦФА — не конечный продукт. Это инфраструктурный слой внутри более широкой финансовой платформы.</div>
+        </div>
+      </div>
+      <div className="hero-bottom"><span>01 / 07</span><span>CAPITAL DISTRIBUTION & LIQUIDITY</span><span>СТРАТЕГИЧЕСКАЯ КОНЦЕПЦИЯ</span></div>
+    </section>
+
+    <Section id="s02" num="02" title="Карта корпоративной ликвидности" lead="Jasmine работает одновременно с тремя слоями рынка: уже размещённым капиталом, его оборотом и гибридными инструментами, где актив становится частью нескольких финансовых сценариев.">
+      <div className="layers-grid">{layers.map((x,i)=><LayerCard key={x.key} layer={x} active={layer===i} onClick={()=>setLayer(i)}/>)}</div>
+      <div className="selected-layer"><div><span>ФОКУС / {layers[layer].key}</span><strong>{layers[layer].tam}</strong></div><p>{layers[layer].description}</p></div>
+      <div className="source-note">Оценочные диапазоны TAM / SAM / SOM приведены как стратегические рабочие гипотезы и требуют отдельной верификации.</div>
+    </Section>
+
+    <Section id="s03" num="03" title="Проблема: компании управляют инструментами, а не ликвидностью" lead="Корпоративная ликвидность остаётся фрагментированной, дорогой и недостаточно мобильной.">
+      <div className="problem-grid">{problems.map(([n,h,d,items])=><article className="problem-card" key={n}><span>{n}</span><h3>{h}</h3><p>{d}</p><ul>{(items as string[]).map(x=><li key={x}>{x}</li>)}</ul></article>)}</div>
+      <div className="bridge"><div><span>ГЛАВНАЯ МЫСЛЬ</span><strong>Сегодня компании управляют отдельными финансовыми инструментами, а не ликвидностью как единым ресурсом.</strong></div><div><span>ЧТО ДОЛЖНА РЕШИТЬ JASMINE</span><p>Объединить инструменты · повысить скорость обращения капитала · снизить стоимость операций · создать единый рынок корпоративной ликвидности.</p></div></div>
+    </Section>
+
+    <Section id="s04" num="04" title="Как Jasmine создаёт единую инфраструктуру" lead="Полный жизненный цикл: от привлечения капитала до повторного финансирования и использования цифрового актива в новых сценариях.">
+      <div className="lifecycle">
+        {[
+          ['01','ПРИВЛЕЧЕНИЕ КАПИТАЛА','Формирование спроса на финансирование'],
+          ['02','ВЫПУСК ЦФА / ГЦП','Цифровизация требований, облигаций и потоков'],
+          ['03','РАЗМЕЩЕНИЕ ЛИКВИДНОСТИ','Инвестиционные и казначейские продукты'],
+          ['04','ВТОРИЧНЫЙ РЫНОК','Обращение, OTC, ценообразование'],
+          ['05','ОБЕСПЕЧЕНИЕ','Использование цифрового актива в качестве залога'],
+          ['06','РЕПО · SCF · ФАКТОРИНГ · TREASURY','Новые финансовые сценарии'],
+          ['07','ПОВТОРНОЕ ФИНАНСИРОВАНИЕ','Возврат капитала в следующий цикл']
+        ].map(([n,h,d],i)=><div className="life-step" key={n}><span>{n}</span><h3>{h}</h3><p>{d}</p>{i<6&&<b>↓</b>}</div>)}
+      </div>
+      <div className="callout blue">Один цифровой актив может многократно использоваться в разных финансовых сценариях.</div>
+      <div className="two-col-note"><p><b>ЦФА и ГЦП</b> — не новый финансовый продукт сами по себе, а инфраструктурный слой, объединяющий привлечение, размещение, обращение и повторное использование корпоративной ликвидности.</p><p><b>Ключевой критерий:</b> ЦФА применяется только там, где даёт измеримое преимущество по скорости, стоимости, расчётам, программируемости, распределению или повторному использованию капитала.</p></div>
+    </Section>
+
+    <Section id="s05" num="05" title="Потенциал перетока ликвидности" lead="Одновременно наращиваем новые активы и увеличиваем скорость обращения капитала.">
+      <div className="table-wrap"><table><thead><tr><th>Слой</th><th>TAM</th><th>SAM / 10 лет</th><th>Доля</th><th>Продукты</th><th>Метрика</th></tr></thead><tbody>{sam.map(r=><tr key={r[0]}>{r.map((x,i)=><td key={i} className={i===0?'strong':''}>{x}</td>)}</tr>)}</tbody></table></div>
+      <div className="migration"><div className="migration-title">МЕХАНИКА ПЕРЕТОКА</div><div className="migration-flow"><span>STOCK<br/><small>Привлечение капитала</small></span><b>→</b><span>AUM<br/><small>Формирование портфеля</small></span><b>→</b><span>HYBRID<br/><small>Факторинг · SCF · секьюритизация</small></span><b>→</b><span>FLOW<br/><small>РЕПО · Treasury · вторичный рынок</small></span><b>→</b><span>ОБОРОТ<br/><small>Рост скорости обращения</small></span></div></div>
+      <div className="source-note">SAM — стратегическая гипотеза на горизонте 10 лет, а не подтверждённый прогноз рынка.</div>
+    </Section>
+
+    <Section id="s06" num="06" title="Экономика платформы" lead="Ценность определяется не количеством выпущенных ЦФА, а объёмом ликвидности, проходящей через инфраструктуру, и её вкладом в прибыль.">
+      <div className="som-grid">{[['STOCK','SAM 25–50 трлн ₽','SOM 5–10 трлн ₽ AUM'],['FLOW','SAM ≈ 100 трлн ₽ / год','SOM ≈ 20 трлн ₽ оборота / год'],['HYBRID','SAM 20–60 трлн ₽','SOM 5–15 трлн ₽ активов в обращении']].map(x=><div key={x[0]}><span>{x[0]}</span><strong>{x[1]}</strong><b>{x[2]}</b></div>)}</div>
+      <h3 className="subheading">Источники дохода</h3>
+      <div className="revenue-grid">{revenues.map(([h,products,income])=><article key={h}><span>{h}</span><h3>{(products as string[]).join(' · ')}</h3><p>{income}</p></article>)}</div>
+      <div className="economics-equation"><span>ВЫРУЧКА</span><b>−</b><span>ПЕРЕМЕННЫЕ ЗАТРАТЫ</span><b>−</b><span>ЗАТРАТЫ НА РИСК</span><b>=</b><strong>CONTRIBUTION P&amp;L</strong></div>
+      <div className="source-note">SOM / экономика — целевые стратегические ориентиры, а не утверждённый финансовый план.</div>
+    </Section>
+
+    <Section id="s07" num="07" title="Roadmap: от продуктов к инфраструктуре" lead="Платформа развивается поэтапно: сначала доказательство спроса и экономики, затем рыночная ликвидность и только после этого — расширение инфраструктурных возможностей.">
+      <div className="roadmap-new">{roadmap.map(([n,h,goal,products,result])=><article key={n}><div className="roadmap-num">{n}</div><div><div className="roadmap-head"><h3>{h}</h3><span>{goal}</span></div><div className="roadmap-cols"><div><b>ПРОДУКТЫ / ВОЗМОЖНОСТИ</b><ul>{(products as string[]).map(x=><li key={x}>{x}</li>)}</ul></div><div><b>ЧТО ПОЛУЧАЕТ ПЛАТФОРМА</b><ul>{(result as string[]).map(x=><li key={x}>{x}</li>)}</ul></div></div></div></article>)}</div>
+      <div className="principles"><span>СТРАТЕГИЧЕСКИЕ ПРИНЦИПЫ</span><ol><li>Клиенты приходят за финансированием, а не за ЦФА.</li><li>ЦФА — инфраструктура, а не конечный продукт.</li><li>Один актив должен использоваться максимальное количество раз.</li><li>Основная ценность — не эмиссия, а оборот.</li><li>Карта корпоративной ликвидности — основа продуктового развития.</li><li>Главная цель — увеличить скорость обращения капитала в экономике.</li></ol></div>
+    </Section>
+
+    <section className="closing slide">
+      <div className="section-kicker">JASMINE / ИТОГ</div>
+      <h2>Сегодня рынок<br/>конкурирует <span>продуктами.</span><br/>Завтра будут<br/>конкурировать <span>инфраструктуры.</span></h2>
+      <p>Победит платформа, которая объединит привлечение, размещение, обращение и повторное использование корпоративной ликвидности.</p>
+      <div className="closing-flow">КАПИТАЛ <i>→</i> ПРИВЛЕЧЕНИЕ <i>→</i> AUM <i>→</i> ОБОРОТ <i>→</i> ЛИКВИДНОСТЬ <i>→</i> ПОВТОРНОЕ ФИНАНСИРОВАНИЕ</div>
+    </section>
+
+    <footer><b>JASMINE</b><span>Платформа управления корпоративной ликвидностью</span><span>Стратегическая концепция / 2026</span></footer>
+  </main>
 }
-const econPools = {
-  ORIGINATION:'Ценность создаётся за счёт привлечения квалифицированного корпоративного спроса и превращения его в повторяемый поток финансирования.',
-  STRUCTURING:'Ценность создаётся за счёт структуры, которая улучшает соответствие финансирования, дистрибуцию и распределение риска.',
-  DISTRIBUTION:'Ценность создаётся за счёт сопоставления инструментов со спросом инвесторов и снижения трения при размещении.',
-  SECONDARY:'Ценность создаётся, когда существующая позиция может сменить владельца благодаря достоверному ценообразованию и исполнению.',
-  ФИНАНСИРОВАНИЕ:'Ценность создаётся, когда актив или позиция становится полезным ресурсом для другой финансовой транзакции.',
-  ИНФРАСТРУКТУРА:'Ценность создаётся за счёт снижения переменных затрат на повторные выпуски, расчёты, обслуживание и потоки данных.'
-} as const;
-function EconomicsSection(){
-  const [pool,setPool]=useState<keyof typeof econPools>('DISTRIBUTION');
-  return <Section id="economics" eyebrow="05 / ЭКОНОМИКА" title="Объём ≠ Ценность." copy="Ключевой показатель для решения — contribution P&amp;L, а не объём выпуска. Каждый поток должен выдерживать переменные затраты, затраты на риск и требования к капиталу.">
-    <div className="economics"><div className="econ-formula"><span>ПУЛЫ ВЫРУЧКИ</span><b>−</b><span>ПЕРЕМЕННЫЕ ЗАТРАТЫ</span><b>−</b><span>ЗАТРАТЫ НА РИСК</span><b>=</b><strong>CONTRIBUTION P&amp;L</strong></div>
-    <div className="econ-grid">{(Object.keys(econPools) as Array<keyof typeof econPools>).map(x=><button className={pool===x?'selected':''} onClick={()=>setPool(x)} key={x}><span className="eyebrow">{x==='ORIGINATION'?'ОРИГИНАЦИЯ':x==='STRUCTURING'?'СТРУКТУРИРОВАНИЕ':x==='DISTRIBUTION'?'ДИСТРИБУЦИЯ':x==='SECONDARY'?'ВТОРИЧНЫЙ РЫНОК':x==='ФИНАНСИРОВАНИЕ'?'ФИНАНСИРОВАНИЕ':'ИНФРАСТРУКТУРА'}</span><p>{econPools[x]}</p></button>)}</div>
-    <div className="econ-readout"><span className="eyebrow">ТЕСТ CONTRIBUTION</span><strong>{pool==='ORIGINATION'?'ОРИГИНАЦИЯ':pool==='STRUCTURING'?'СТРУКТУРИРОВАНИЕ':pool==='DISTRIBUTION'?'ДИСТРИБУЦИЯ':pool==='SECONDARY'?'ВТОРИЧНЫЙ РЫНОК':pool==='ФИНАНСИРОВАНИЕ'?'ФИНАНСИРОВАНИЕ':'ИНФРАСТРУКТУРА'}</strong><p>{econPools[pool]} Тест — остаётся ли contribution положительным после переменных затрат и затрат на риск, а не растёт ли номинальный объём.</p></div></div>
-  </Section>
-}
-export default function Home(){return <main className="page"><nav className="nav mono"><a href="#">JASMINE</a><div className="nav-links"><a href="#capital">01 ПРОБЛЕМА</a><a href="#engine">02 КОНТУР</a><a href="#liquidity">03 ЛИКВИДНОСТЬ</a><a href="#economics">04 ЭКОНОМИКА</a><a href="#vtb">05 ВТБ</a><a href="#roadmap">06 ДОРОЖНАЯ КАРТА</a></div><span className="nav-progress">КАПИТАЛ / МАРШРУТИЗАЦИЯ / ЛИКВИДНОСТЬ</span></nav>
-<section className="section hero"><div><div className="eyebrow reveal">JASMINE / 02.0</div><h1 className="reveal delay1">КАПИТАЛ<br/>ДИСТРИБУЦИЯ<br/><span style={{color:'var(--accent)'}}>&amp; ЛИКВИДНОСТЬ</span><br/>КОНТУР</h1></div><div><div className="hero-sub reveal delay2"><div className="eyebrow">ТЕЗИС</div><p className="hero-copy">Соединение корпоративного спроса на капитал с инвестиционной ликвидностью — через оригацию, структурирование, дистрибуцию, вторичный рынок и повторное использование капитала.</p></div><Flow/></div></section>
-<Section id="capital" eyebrow="01 / КАПИТАЛ ЕСТЬ" title="Капитал существует. Ликвидность фрагментирована." copy="Возможность не в создании ещё одного инструмента. Она в соединении спроса на капитал и инвестиционной ликвидности в повторяемый финансовый поток."><div className="capital-grid"><div className="capital-cell"><span className="eyebrow">СПРОС</span><strong>Корпоративный<br/>капитал</strong><p>Потребности в финансировании оборотного капитала, активов, проектов и структурированных потоков.</p></div><div className="capital-cell capital-center"><div className="capital-ring">МАРШРУТИЗАЦИЯ<br/>КАПИТАЛА</div></div><div className="capital-cell"><span className="eyebrow">ПРЕДЛОЖЕНИЕ</span><strong>Инвестиционная<br/>ликвидность</strong><p>Капитал, который ищет доходность, диверсификацию, ликвидность и эффективное размещение.</p></div></div></Section>
-<Section id="friction" eyebrow="02 / ТРЕНИЕ" title="Разрыв не в отсутствии капитала." copy="Он в трении между доступом, ценообразованием, ликвидностью и повторным использованием. Jasmine устраняет эти барьеры там, где это оправдано экономикой."><div className="frictions">{frictions.map(([n,h,p])=><article className="friction" tabIndex={0} key={n}><b>{n}</b><h3>{h}</h3><p>{p}</p><span className="friction-mark">↗</span></article>)}</div></Section>
-<Section id="thesis" eyebrow="03 / ТЕЗИС JASMINE" title="От финансовых инструментов к инфраструктуре капитала." copy="ЦФА — не конечная цель. Это один из инструментов внутри контура — там, где он улучшает скорость, доступ, автоматизацию, расчёты, дистрибуцию или эффективность капитала."><div className="thesis"><div className="model"><h3>Текущая модель</h3><div className="steps">{oldModel.map((x,i)=><div className="step" key={x}><i>0{i+1}</i>{x}</div>)}</div></div><div className="model jasmine"><h3>Модель Jasmine</h3><div className="steps">{jasmine.map((x,i)=><div className="step" key={x}><i>{String(i+1).padStart(2,'0')}</i>{x}</div>)}</div></div></div></Section>
-<JasmineEngine/><LiquiditySection/>
-<Section id="reuse" eyebrow="03.5 / КАПИТАЛ ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ" title="Капитал не останавливается на расчётах." copy="Контур усиливается, когда инвестор может торговать, финансировать, реинвестировать и возвращать капитал в следующий выпуск."><div className="reuse-loop">{['Выпуск','Инвестиция','Торговля','Обеспечение','Финансирование','Реинвестирование','Новый выпуск'].map((x,i)=><div className="reuse-node" key={x}><span>{String(i+1).padStart(2,'0')}</span>{x}</div>)}</div></Section>
-<BusinessSystemSection/>
-<EconomicsSection/>
-<Section id="vtb" eyebrow="06 / ПОЧЕМУ ВТБ" title="Преимущество не в одном продукте. Оно в комбинации возможностей." copy="У ВТБ уже есть элементы системы: корпоративная оригация, рынки капитала, дистрибуция, ликвидность, инфраструктура и риск. Jasmine соединяет их в повторяемый поток."><div className="vtb-stack"><div><span className="eyebrow">СЕГОДНЯ</span><strong>Корпоративная оригинация</strong><strong>Рынки капитала</strong><strong>Дистрибуция инвесторам</strong><strong>Риск и инфраструктура</strong></div><div className="stack-arrow">→</div><div className="jasmine-core"><span className="eyebrow">JASMINE</span><strong>СОЕДИНИТЬ</strong><p>Направлять спрос к ликвидности. Возвращать ликвидность к спросу.</p></div><div><span className="eyebrow">ФОРМИРУЕТСЯ СО ВРЕМЕНЕМ</span><strong>Ликвидность</strong><strong>Данные о ценообразовании</strong><strong>Повторяемость</strong><strong>Повторное использование капитала</strong></div></div></Section>
-<Section id="flywheel" eyebrow="07 / МАХОВИК" title="Ликвидность creates the conditions for more liquidity." copy="Маховик — не утверждение о сетевом эффекте. Каждый шаг должен улучшать экономику следующего шага."><div className="flywheel">{['ЭМИТЕНТЫ','ИНСТРУМЕНТЫ','ИНВЕСТОРЫ','ЛИКВИДНОСТЬ','ЦЕНООБРАЗОВАНИЕ','ТРАНЗАКЦИИ','ДАННЫЕ','ЦЕНООБРАЗОВАНИЕ РИСКА'].map((x,i)=><div key={x} style={{transform:'rotate('+(i*45)+'deg) translateY(-150px) rotate('+(-i*45)+'deg)'}}>{x}</div>)}</div></Section>
-<Section id="roadmap" eyebrow="08 / 12–24 МЕСЯЦЕВ" title="Строить через контрольные ворота, а не обещания." copy="Масштабирование следует за доказательством экономики. Каждая фаза должна заслужить переход к следующей."><div className="roadmap">{[['01','ФУНДАМЕНТ','0–3 МЕСЯЦЕВ','Доказать базовый поток и операционную модель.'],['02','ДИСТРИБУЦИЯ','3–6 МЕСЯЦЕВ','Соединить повторяемые клиентские пути эмитентов и инвесторов.'],['03','ЛИКВИДНОСТЬ','6–12 МЕСЯЦЕВ','Построить механизмы вторичного рынка и обратной связи по цене.'],['04','ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ','12–18 МЕСЯЦЕВ','Превратить ликвидность в финансирование и реинвестирование.'],['05','МАСШТАБИРОВАНИЕ','18–24 МЕСЯЦЕВ','Масштабировать только там, где доказана экономика contribution.']].map(([n,h,t,p])=><article key={n}><span>{n}</span><div><b>{h}</b><em>{t}</em><p>{p}</p></div></article>)}</div></Section>
-<section className="final section"><div className="eyebrow">JASMINE / ФИНАЛЬНЫЙ ТЕЗИС</div><h2>Возможность не в том, чтобы выпускать больше цифровых активов.</h2><p>Возможность в том, чтобы сделать движение капитала более эффективным.</p><div className="final-flow">КАПИТАЛ <span>→</span> ДИСТРИБУЦИЯ <span>→</span> ЛИКВИДНОСТЬ <span>→</span> ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ <span>→</span> РОСТ</div></section><footer className="footer"><span>JASMINE / КАПИТАЛ ДИСТРИБУЦИЯ &amp; ЛИКВИДНОСТЬ КОНТУР</span><span>СТРАТЕГИЧЕСКАЯ КОНЦЕПЦИЯ / 2026</span></footer></main>}
