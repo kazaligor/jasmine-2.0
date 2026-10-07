@@ -40,7 +40,7 @@ jobs:
           grep -q 'id="top"' web/index.html
           grep -q 'id="thesis"' web/index.html
           test "$(grep -c '<section' web/index.html)" -ge 10
-          test "$(grep -c 'href="#' web/index.html)" -ge 10
+          test "$(grep -o 'href="#' web/index.html | wc -l)" -ge 10
 
       - name: Prepare site
         shell: bash
