@@ -17,7 +17,7 @@ function LiquiditySection(){
   const m=liquidityModes[mode];
   return <Section id="liquidity" eyebrow="03 / LIQUIDITY ENGINE" title="A transaction should create a path to the next transaction." copy="Primary issuance is only the beginning. Secondary trading, market making, pricing feedback and financing turn an asset into a reusable capital component.">
     <div className="liquidity-map"><div className="liquidity-toolbar"><div className="toggle">{(Object.keys(liquidityModes) as Array<keyof typeof liquidityModes>).map(x=><button className={mode===x?'selected':''} onClick={()=>setMode(x)} key={x}>{x}</button>)}</div><span className="liquidity-status"><span className="pulse"/> {m.label}</span></div>
-    <p className="interactive-copy">{m.desc}</p><div className="liq-row">{m.route.map((x,i)=><Fragment key={x}><span className={i===1?'route-core':''}>{x}</span>{i<2&&<b>→</b>}</Fragment>)}</div>
+    <p className="interactive-copy">{m.desc}</p><div className="capital-path"><span>CAPITAL</span><i>→</i><strong>{mode==='Primary'?'ISSUER':'INVESTOR A'}</strong><i>→</i><b>{mode==='Primary'?'PRIMARY':'SECONDARY'}</b><i>→</i><strong>{mode==='Primary'?'INVESTOR A':'INVESTOR B'}</strong><i>→</i><span>{mode==='Primary'?'LIQUIDITY':'REUSE'}</span></div><div className="liq-row">{m.route.map((x,i)=><Fragment key={x}><span className={i===1?'route-core':''}>{x}</span>{i<2&&<b>→</b>}</Fragment>)}</div>
     <div className="liq-secondary"><span>{m.signals[0]}</span><strong>{m.signals[1]}</strong><span>{m.signals[2]}</span></div><div className="liq-footer"><span>PRICE FEEDBACK</span><span>↕ CAPITAL</span><span>LIQUIDITY</span></div></div>
   </Section>
 }
