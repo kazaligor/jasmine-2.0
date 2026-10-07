@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 const layers = [
   {
@@ -58,7 +58,7 @@ const roadmap = [
   ['03','Развитие регулирования','Превратить ЦФА в универсальную инфраструктуру движения капитала.',['ЦФА-РЕПО','ЦФА как универсальный залог','Межплатформенный оборот','Автоматическое цифровое казначейство','Кросс-продуктовые сделки'],['Эффект сети','Масштабирование оборота','Новые источники ликвидности','Инфраструктурная маржа']]
 ];
 
-function Section({num,title,lead,children,id}:{num:string;title:string;lead?:string;children:React.ReactNode;id:string}) {
+function Section({num,title,lead,children,id}:{num:string;title:string;lead?:string;children:ReactNode;id:string}) {
   return <section id={id} className="slide section">
     <div className="section-number">{num}</div>
     <div className="section-main">
